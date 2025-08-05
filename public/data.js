@@ -381,12 +381,15 @@ class AttendSysData {
 
     updateUser(id, updates) {
         const users = this.getUsers();
-        const index = users.findIndex(u => u.id === id);
+        // Convert id to number for comparison since IDs are stored as numbers
+        const numericId = typeof id === 'string' ? parseInt(id) : id;
+        const index = users.findIndex(u => u.id === numericId);
         if (index !== -1) {
             users[index] = { ...users[index], ...updates };
             localStorage.setItem('attendsys_users', JSON.stringify(users));
             return users[index];
         }
+        console.warn('User not found with ID:', id, 'Numeric ID:', numericId);
         return null;
     }
 

@@ -142,14 +142,19 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5><i class="fas fa-list me-2"></i> Employee List</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control" placeholder="Search users..." style="width: 200px;">
-                            <select class="form-select" style="width: 150px;">
+                            <input type="text" class="form-control" placeholder="Search users..." style="width: 200px;" id="searchInput" oninput="filterUsers()">
+                            <select class="form-select" style="width: 150px;" id="departmentFilter" onchange="filterUsers()">
                                 <option value="">All Departments</option>
                                 <option value="hr">HR</option>
                                 <option value="it">IT</option>
                                 <option value="finance">Finance</option>
                                 <option value="marketing">Marketing</option>
+                                <option value="engineering">Engineering</option>
+                                <option value="sales">Sales</option>
                             </select>
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()" title="Clear Filters">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -279,12 +284,102 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId" name="editUserId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editFirstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="editFirstName" name="firstName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editLastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="editLastName" name="lastName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="editEmail" name="email" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editEmployeeId" class="form-label">Employee ID</label>
+                                    <input type="text" class="form-control" id="editEmployeeId" name="employeeId" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editDepartment" class="form-label">Department</label>
+                                    <select class="form-select" id="editDepartment" name="department" required>
+                                        <option value="">Select department</option>
+                                        <option value="hr">HR</option>
+                                        <option value="it">IT</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="engineering">Engineering</option>
+                                        <option value="sales">Sales</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPosition" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="editPosition" name="position" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editJoinDate" class="form-label">Join Date</label>
+                                    <input type="date" class="form-control" id="editJoinDate" name="joinDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editUserRole" class="form-label">Role</label>
+                                    <select class="form-select" id="editUserRole" name="role" required>
+                                        <option value="">Select role</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateUser()">Update User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="auth.js"></script>
     <script src="data.js"></script>
     <script>
-        function loadUsers() {
-            const users = attendSysData.getUsers();
+        function loadUsers(filteredUsers = null) {
+            const users = filteredUsers || attendSysData.getUsers();
             const tbody = document.querySelector('#usersTable tbody');
             
             if (users.length === 0) {
@@ -293,7 +388,7 @@
                         <td colspan="7" class="text-center text-muted">
                             <i class="fas fa-users-slash fa-2x mb-2"></i>
                             <p>No users found</p>
-                            <small>Click "Add New User" to get started</small>
+                            <small>${filteredUsers ? 'Try adjusting your search or filter criteria' : 'Click "Add New User" to get started'}</small>
                         </td>
                     </tr>
                 `;
@@ -333,12 +428,66 @@
             `).join('');
         }
 
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const departmentFilter = document.getElementById('departmentFilter').value.toLowerCase();
+            const allUsers = attendSysData.getUsers();
+            
+            const filteredUsers = allUsers.filter(user => {
+                // Search filter - check name, email, employee ID, and position
+                const matchesSearch = !searchTerm || 
+                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    user.employeeId.toLowerCase().includes(searchTerm) ||
+                    user.position.toLowerCase().includes(searchTerm);
+                
+                // Department filter
+                const matchesDepartment = !departmentFilter || 
+                    user.department.toLowerCase() === departmentFilter;
+                
+                return matchesSearch && matchesDepartment;
+            });
+            
+            loadUsers(filteredUsers);
+            
+            // Update the result count display
+            updateFilterStatus(filteredUsers.length, allUsers.length);
+        }
+
+        function updateFilterStatus(filteredCount, totalCount) {
+            const tableHeader = document.querySelector('.card-header h5');
+            if (filteredCount === totalCount) {
+                tableHeader.innerHTML = '<i class="fas fa-list me-2"></i> Employee List';
+            } else {
+                tableHeader.innerHTML = `<i class="fas fa-list me-2"></i> Employee List (${filteredCount} of ${totalCount})`;
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('departmentFilter').value = '';
+            loadUsers();
+            updateFilterStatus(attendSysData.getUsers().length, attendSysData.getUsers().length);
+        }
+
         function loadUserStats() {
-            const stats = attendSysData.getUserStats();
-            document.querySelector('.card:nth-child(1) h4').textContent = stats.total;
-            document.querySelector('.card:nth-child(2) h4').textContent = stats.active;
-            document.querySelector('.card:nth-child(3) h4').textContent = stats.admins;
-            document.querySelector('.card:nth-child(4) h4').textContent = stats.newThisMonth;
+            try {
+                const stats = attendSysData.getUserStats();
+                
+                // More specific selectors to avoid null references
+                const totalElement = document.querySelector('.row .col-md-3:nth-child(1) .card-body h4');
+                const activeElement = document.querySelector('.row .col-md-3:nth-child(2) .card-body h4');
+                const adminsElement = document.querySelector('.row .col-md-3:nth-child(3) .card-body h4');
+                const newThisMonthElement = document.querySelector('.row .col-md-3:nth-child(4) .card-body h4');
+                
+                if (totalElement) totalElement.textContent = stats.total;
+                if (activeElement) activeElement.textContent = stats.active;
+                if (adminsElement) adminsElement.textContent = stats.admins;
+                if (newThisMonthElement) newThisMonthElement.textContent = stats.newThisMonth;
+            } catch (error) {
+                console.warn('Error updating user stats:', error);
+                // Continue silently - stats update is not critical for edit functionality
+            }
         }
 
         function addUser() {
@@ -361,16 +510,25 @@
                 
                 // Close modal and reset form
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-                modal.hide();
+                if (modal) {
+                    modal.hide();
+                }
                 form.reset();
                 
                 // Refresh data
                 loadUsers();
-                loadUserStats();
+                
+                // Update stats with error handling
+                try {
+                    loadUserStats();
+                } catch (statsError) {
+                    console.warn('Stats update failed:', statsError);
+                }
                 
                 // Show success message
                 showNotification('User added successfully!', 'success');
             } catch (error) {
+                console.error('Add user error:', error);
                 showNotification('Error adding user: ' + error.message, 'error');
             }
         }
@@ -379,8 +537,141 @@
             const users = attendSysData.getUsers();
             const user = users.find(u => u.id === id);
             if (user) {
-                // For demo purposes, just show an alert
-                alert(`Edit user: ${user.name}\nEmail: ${user.email}\nDepartment: ${user.department}`);
+                console.log('Editing user:', user); // Debug log
+                
+                // Populate edit form with user data
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editFirstName').value = user.firstName || user.name.split(' ')[0] || '';
+                document.getElementById('editLastName').value = user.lastName || user.name.split(' ')[1] || '';
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('editEmployeeId').value = user.employeeId || '';
+                
+                // Fix department selection - normalize the value to lowercase
+                const departmentSelect = document.getElementById('editDepartment');
+                const userDepartment = user.department ? user.department.toLowerCase() : '';
+                departmentSelect.value = userDepartment;
+                console.log('User department:', user.department, 'Normalized:', userDepartment, 'Selected value:', departmentSelect.value); // Debug log
+                
+                // If the normalized value doesn't match, try to find a matching option
+                if (departmentSelect.value === '' && user.department) {
+                    const options = Array.from(departmentSelect.options);
+                    const matchingOption = options.find(option => 
+                        option.text.toLowerCase() === user.department.toLowerCase() ||
+                        option.value.toLowerCase() === user.department.toLowerCase()
+                    );
+                    if (matchingOption) {
+                        departmentSelect.value = matchingOption.value;
+                        console.log('Found matching option:', matchingOption.value);
+                    }
+                }
+                
+                document.getElementById('editPosition').value = user.position || '';
+                
+                // Format join date for input field (YYYY-MM-DD format)
+                if (user.joinDate) {
+                    const date = new Date(user.joinDate);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    document.getElementById('editJoinDate').value = formattedDate;
+                } else {
+                    document.getElementById('editJoinDate').value = '';
+                }
+                
+                // Fix role selection - normalize the value to lowercase
+                const roleSelect = document.getElementById('editUserRole');
+                const userRole = user.role ? user.role.toLowerCase() : '';
+                roleSelect.value = userRole;
+                console.log('User role:', user.role, 'Normalized:', userRole, 'Selected value:', roleSelect.value); // Debug log
+                
+                // Show edit modal
+                const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                editModal.show();
+            }
+        }
+
+        async function updateUser() {
+            try {
+                const form = document.getElementById('editUserForm');
+                const formData = new FormData(form);
+                
+                // Convert ID to number to match data structure
+                const userId = parseInt(formData.get('editUserId'));
+                const firstName = formData.get('firstName');
+                const lastName = formData.get('lastName');
+                
+                const userData = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    name: `${firstName} ${lastName}`, // Combine names for compatibility
+                    email: formData.get('email'),
+                    employeeId: formData.get('employeeId'),
+                    department: formData.get('department'),
+                    position: formData.get('position'),
+                    joinDate: formData.get('joinDate'),
+                    role: formData.get('role')
+                };
+
+                console.log('Updating user with ID:', userId, 'Data:', userData); // Debug log
+
+                // If using demo data (data.js)
+                if (typeof attendSysData !== 'undefined') {
+                    const result = attendSysData.updateUser(userId, userData);
+                    console.log('Update result:', result); // Debug log
+                    
+                    if (result) {
+                        loadUsers();
+                        
+                        // Update stats with error handling
+                        try {
+                            loadUserStats();
+                        } catch (statsError) {
+                            console.warn('Stats update failed:', statsError);
+                        }
+                        
+                        showNotification('User updated successfully!', 'success');
+                    } else {
+                        throw new Error('User not found or update failed');
+                    }
+                } else {
+                    // If using real API
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/users/${userId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(userData)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        loadUsers();
+                        
+                        // Update stats with error handling
+                        try {
+                            loadUserStats();
+                        } catch (statsError) {
+                            console.warn('Stats update failed:', statsError);
+                        }
+                        
+                        showNotification('User updated successfully!', 'success');
+                    } else {
+                        throw new Error(result.message || 'Failed to update user');
+                    }
+                }
+
+                // Hide modal
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                if (editModal) {
+                    editModal.hide();
+                }
+                
+                // Reset form
+                document.getElementById('editUserForm').reset();
+
+            } catch (error) {
+                console.error('Update user error:', error);
+                showNotification('Error updating user: ' + error.message, 'error');
             }
         }
 
@@ -394,12 +685,18 @@
 
         function toggleUserStatus(id) {
             const users = attendSysData.getUsers();
-            const user = users.find(u => u.id === id);
+            // Convert to number to match data structure
+            const numericId = parseInt(id);
+            const user = users.find(u => u.id === numericId);
             if (user && confirm(`Are you sure you want to ${user.status === 'Active' ? 'deactivate' : 'activate'} ${user.name}?`)) {
                 const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-                attendSysData.updateUser(id, { status: newStatus });
+                attendSysData.updateUser(numericId, { status: newStatus });
                 loadUsers();
-                loadUserStats();
+                try {
+                    loadUserStats();
+                } catch (statsError) {
+                    console.warn('Stats update failed:', statsError);
+                }
                 showNotification(`User ${newStatus.toLowerCase()} successfully!`, 'success');
             }
         }
