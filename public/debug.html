@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug AttendSys Data</title>
+</head>
+<body>
+    <h1>Debug AttendSys Data</h1>
+    <button onclick="clearAllData()">Clear All Data</button>
+    <button onclick="forceReloadData()">Force Reload Data</button>
+    <button onclick="showCurrentData()">Show Current Data</button>
+    <div id="output"></div>
+
+    <script src="data.js"></script>
+    <script>
+        function clearAllData() {
+            localStorage.clear();
+            alert('All localStorage data cleared!');
+        }
+
+        function forceReloadData() {
+            localStorage.removeItem('attendsys_users');
+            localStorage.removeItem('attendsys_leaves');
+            localStorage.removeItem('attendsys_attendance');
+            localStorage.removeItem('attendsys_shifts');
+            
+            // Reinitialize
+            window.attendSysData = new AttendSysData();
+            
+            alert('Data reloaded! Check users now.');
+        }
+
+        function showCurrentData() {
+            const users = attendSysData.getUsers();
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <h3>Current Users (${users.length}):</h3>
+                <pre>${JSON.stringify(users, null, 2)}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>

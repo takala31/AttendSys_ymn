@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear AttendSys Data</title>
+</head>
+<body>
+    <h1>Clear AttendSys Data</h1>
+    <button onclick="clearData()">Clear All Data</button>
+    <button onclick="showData()">Show Current Data</button>
+    <div id="output"></div>
+
+    <script>
+        function clearData() {
+            localStorage.removeItem('attendsys_users');
+            localStorage.removeItem('attendsys_leaves');
+            localStorage.removeItem('attendsys_attendance');
+            localStorage.removeItem('attendsys_shifts');
+            alert('Data cleared! Now reload the users page.');
+        }
+
+        function showData() {
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <h3>Current Data:</h3>
+                <p><strong>Users:</strong> ${localStorage.getItem('attendsys_users') || 'null'}</p>
+                <p><strong>Leaves:</strong> ${localStorage.getItem('attendsys_leaves') || 'null'}</p>
+                <p><strong>Attendance:</strong> ${localStorage.getItem('attendsys_attendance') || 'null'}</p>
+                <p><strong>Shifts:</strong> ${localStorage.getItem('attendsys_shifts') || 'null'}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

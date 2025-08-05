@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete AttendSys Test</title>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12">
+                <h2><i class="fas fa-check-circle"></i> AttendSys Complete System Test</h2>
+                
+                <div class="btn-group mb-3" role="group">
+                    <button onclick="resetAndTest()" class="btn btn-danger">🔄 Reset & Test All</button>
+                    <button onclick="loginAsAdmin()" class="btn btn-success">👤 Login as Admin</button>
+                    <button onclick="showUsers()" class="btn btn-info">👥 Show Users</button>
+                    <button onclick="testFeatures()" class="btn btn-warning">⚡ Test Features</button>
+                </div>
+                
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        function resetAndTest() {
+            updateStatus('🔄 Resetting system...');
+            localStorage.clear();
+            
+            setTimeout(() => {
+                const users = attendSysData.getUsers();
+                updateStatus(`
+                    ✅ Reset Complete!<br>
+                    📊 Total Users: ${users.length}<br>
+                    👑 Admin User: ${users.find(u => u.role === 'admin')?.name}<br>
+                    🖼️ Profile Pictures: ${users.every(u => u.avatar) ? 'All have avatars' : 'Missing avatars'}
+                `);
+                showUsers();
+            }, 500);
+        }
+
+        function loginAsAdmin() {
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('currentUser', JSON.stringify({
+                email: 'admin@hotmail.com',
+                name: 'Admin User',
+                role: 'admin',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+            }));
+            updateStatus('✅ Logged in as Admin! You can now navigate to any page.');
+        }
+
+        function showUsers() {
+            const users = attendSysData.getUsers();
+            const adminUser = users.find(u => u.role === 'admin');
+            const regularUsers = users.filter(u => u.role !== 'admin');
+            
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-success">
+                    <h4><i class="fas fa-users"></i> Employee Directory (${users.length} total)</h4>
+                    
+                    <div class="mb-4">
+                        <h5>👑 Admin User</h5>
+                        <div class="card" style="max-width: 300px;">
+                            <img src="${adminUser.avatar}" class="card-img-top" style="height:200px;object-fit:cover;" alt="${adminUser.name}">
+                            <div class="card-body">
+                                <h6 class="card-title">${adminUser.name}</h6>
+                                <p class="card-text">
+                                    <strong>ID:</strong> ${adminUser.employeeId}<br>
+                                    <strong>Email:</strong> ${adminUser.email}<br>
+                                    <strong>Position:</strong> ${adminUser.position}<br>
+                                    <strong>Department:</strong> ${adminUser.department}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5>👥 All Employees (${regularUsers.length} employees)</h5>
+                    <div class="row">
+                        ${regularUsers.map(user => `
+                            <div class="col-md-2 mb-3">
+                                <div class="card">
+                                    <img src="${user.avatar}" class="card-img-top" style="height:120px;object-fit:cover;" alt="${user.name}">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title" style="font-size:0.9rem;">${user.name}</h6>
+                                        <small class="text-muted">${user.employeeId}</small><br>
+                                        <small class="badge bg-primary">${user.department}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function testFeatures() {
+            const users = attendSysData.getUsers();
+            const leaves = attendSysData.getLeaveRequests();
+            const attendance = attendSysData.getAttendanceRecords();
+            
+            updateStatus(`
+                📊 <strong>System Status:</strong><br>
+                👥 Users: ${users.length}<br>
+                📝 Leave Requests: ${leaves.length}<br>
+                📅 Attendance Records: ${attendance.length}<br>
+                🔐 Authentication: ${localStorage.getItem('isAuthenticated') ? 'Logged in' : 'Not logged in'}<br>
+                <br>
+                <a href="login.html" class="btn btn-success btn-sm">Go to Login</a>
+                <a href="users.html" class="btn btn-info btn-sm">Go to Users</a>
+                <a href="dashboard.html" class="btn btn-primary btn-sm">Go to Dashboard</a>
+            `);
+        }
+
+        function updateStatus(message) {
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-info">
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Auto test on load
+        setTimeout(() => {
+            resetAndTest();
+        }, 500);
+    </script>
+</body>
+</html>

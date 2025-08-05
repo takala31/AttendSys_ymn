@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AttendSys</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        .page-content {
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <div class="text-center mb-4">
+                    <h4><i class="fas fa-clock"></i> AttendSys</h4>
+                    <div class="user-info mt-3">
+                        <img src="/api/placeholder/40/40" alt="Profile" class="profile-img mb-2" id="userProfileImg">
+                        <div id="userName">Admin User</div>
+                        <small id="userRole" class="text-light">Admin</small>
+                    </div>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="dashboard.html">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="attendance.html">
+                        <i class="fas fa-calendar-check me-2"></i> Attendance
+                    </a>
+                    <a class="nav-link" href="leaves.html">
+                        <i class="fas fa-calendar-times me-2"></i> Leaves
+                    </a>
+                    <a class="nav-link" href="users.html">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a class="nav-link" href="shifts.html">
+                        <i class="fas fa-business-time me-2"></i> Shifts
+                    </a>
+                    <a class="nav-link" href="reports.html">
+                        <i class="fas fa-chart-bar me-2"></i> Reports
+                    </a>
+                    <hr class="my-3">
+                    <a class="nav-link" href="#" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 page-content p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h2>
+                    <div class="text-muted">
+                        <i class="fas fa-calendar me-1"></i> <span id="currentDate"></span>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card text-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <h3>150</h3>
+                                <p class="mb-0">Total Employees</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card text-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-check fa-2x mb-2"></i>
+                                <h3>142</h3>
+                                <p class="mb-0">Present Today</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card text-warning">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                <h3>5</h3>
+                                <p class="mb-0">Late Today</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card stat-card text-info">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                <h3>8</h3>
+                                <p class="mb-0">Pending Leaves</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-history me-2"></i> Recent Activities</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>John Doe</strong> checked in
+                                            <small class="text-muted d-block">2 minutes ago</small>
+                                        </div>
+                                        <span class="badge bg-success">Check In</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Jane Smith</strong> requested leave
+                                            <small class="text-muted d-block">1 hour ago</small>
+                                        </div>
+                                        <span class="badge bg-warning">Leave Request</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Mike Johnson</strong> checked out
+                                            <small class="text-muted d-block">2 hours ago</small>
+                                        </div>
+                                        <span class="badge bg-info">Check Out</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-calendar-alt me-2"></i> Upcoming Events</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item">
+                                        <strong>Team Meeting</strong>
+                                        <small class="text-muted d-block">Tomorrow, 10:00 AM</small>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <strong>Monthly Review</strong>
+                                        <small class="text-muted d-block">Aug 15, 2025</small>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <strong>Holiday</strong>
+                                        <small class="text-muted d-block">Aug 20, 2025</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="data.js"></script>
+    <script>
+        // Authentication check
+        function checkAuth() {
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            if (!isAuthenticated) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            // Update user info
+            if (currentUser.name) {
+                document.querySelector('.user-info div').textContent = currentUser.name;
+                document.querySelector('.user-info small').textContent = currentUser.role || 'User';
+                
+                // Update user avatar
+                const userImg = document.getElementById('userProfileImg');
+                if (currentUser.avatar && userImg) {
+                    userImg.src = currentUser.avatar;
+                }
+            }
+            
+            return true;
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            const userStats = attendSysData.getUserStats();
+            const leaveStats = attendSysData.getLeaveStats();
+            
+            // Update the statistics cards
+            document.getElementById('totalEmployees').textContent = userStats.total;
+            document.getElementById('presentToday').textContent = userStats.active; // Using active as present for demo
+            document.getElementById('lateToday').textContent = Math.floor(userStats.active * 0.05); // 5% late rate
+            document.getElementById('pendingLeaves').textContent = leaveStats.pending;
+        }
+
+        // Update current date
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+        
+        // Initialize page
+        if (checkAuth()) {
+            updateCurrentDate();
+            loadDashboardStats();
+            setInterval(updateCurrentDate, 60000);
+        }
+    </script>
+</body>
+</html>

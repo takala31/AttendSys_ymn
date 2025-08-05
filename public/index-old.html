@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendSys - Attendance Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .loading-container {
+            text-align: center;
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3" id="sidebar" style="display: none;">
+                <div class="text-center mb-4">
+                    <h4><i class="fas fa-clock"></i> AttendSys</h4>
+                    <div class="user-info mt-3">
+                        <img src="/api/placeholder/40/40" alt="Profile" class="profile-img mb-2" id="userProfileImg">
+                        <div id="userName">User Name</div>
+                        <small id="userRole" class="text-light">Role</small>
+                    </div>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#" onclick="showPage('dashboard', this)">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" onclick="showPage('attendance', this)">
+                        <i class="fas fa-calendar-check me-2"></i> Attendance
+                    </a>
+                    <a class="nav-link" href="#" onclick="showPage('leaves', this)">
+                        <i class="fas fa-calendar-times me-2"></i> Leaves
+                    </a>
+                    <a class="nav-link admin-only" href="#" onclick="showPage('users', this)" style="display: none;">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a class="nav-link admin-only" href="#" onclick="showPage('shifts', this)" style="display: none;">
+                        <i class="fas fa-business-time me-2"></i> Shifts
+                    </a>
+                    <a class="nav-link admin-only" href="#" onclick="showPage('reports', this)" style="display: none;">
+                        <i class="fas fa-chart-bar me-2"></i> Reports
+                    </a>
+                    <hr class="my-3">
+                    <a class="nav-link" href="#" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 page-content p-4" id="mainContent">
+                
+                <!-- Login Page -->
+                <div id="loginPage" class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+                    <div class="card" style="width: 100%; max-width: 400px;">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                                <h2>AttendSys</h2>
+                                <p class="text-muted">Attendance Management System</p>
+                            </div>
+                            
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                                </button>
+                            </form>
+                            
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    Demo: admin@hotmail.com / abc<br>
+                                    employee@company.com / password123
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Page -->
+                <div id="dashboardPage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h2>
+                        <div class="text-muted">
+                            <i class="fas fa-calendar me-1"></i> <span id="currentDate"></span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions (Employee) -->
+                    <div class="row mb-4" id="quickActions" style="display: none;">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h5>Quick Check-in</h5>
+                                    <button class="btn btn-success btn-lg" id="checkinBtn" onclick="checkIn()">
+                                        <i class="fas fa-sign-in-alt me-2"></i> Check In
+                                    </button>
+                                    <button class="btn btn-warning btn-lg" id="checkoutBtn" onclick="checkOut()" style="display: none;">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Check Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>Today's Status</h5>
+                                    <div id="todayStatus">
+                                        <p><strong>Check-in:</strong> <span id="checkinTime">--:--</span></p>
+                                        <p><strong>Check-out:</strong> <span id="checkoutTime">--:--</span></p>
+                                        <p><strong>Working Hours:</strong> <span id="workingHours">0h 0m</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4" id="statsCards">
+                        <!-- Stats will be populated dynamically -->
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-history me-2"></i> Recent Activities</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentActivities">
+                                        <!-- Activities will be populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-calendar-alt me-2"></i> Upcoming Events</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="upcomingEvents">
+                                        <!-- Events will be populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Pages (Attendance, Leaves, etc.) -->
+                <div id="attendancePage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-calendar-check me-2"></i> Attendance</h2>
+                        <div class="text-muted">
+                            <i class="fas fa-calendar me-1"></i> <span id="currentDate2"></span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Attendance Records</h5>
+                            <p>This section will show attendance records, check-in/out history, and attendance reports.</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Check In</th>
+                                            <th>Check Out</th>
+                                            <th>Hours</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Aug 03, 2025</td>
+                                            <td>09:15 AM</td>
+                                            <td>05:30 PM</td>
+                                            <td>8h 15m</td>
+                                            <td><span class="badge bg-success">Present</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Aug 02, 2025</td>
+                                            <td>09:05 AM</td>
+                                            <td>05:00 PM</td>
+                                            <td>7h 55m</td>
+                                            <td><span class="badge bg-success">Present</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="leavesPage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-calendar-times me-2"></i> Leaves</h2>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Request Leave
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Leave Balance</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <h4 class="text-primary">15</h4>
+                                                <small>Annual Leave</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <h4 class="text-success">8</h4>
+                                                <small>Sick Leave</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Recent Requests</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Aug 10-12, 2025</span>
+                                            <span class="badge bg-warning">Pending</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Jul 15-16, 2025</span>
+                                            <span class="badge bg-success">Approved</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="usersPage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-users me-2"></i> Users</h2>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Add User
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Employee Management</h5>
+                            <p>Manage users, roles, and permissions.</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Department</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>EMP001</td>
+                                            <td>Admin User</td>
+                                            <td>admin@hotmail.com</td>
+                                            <td>IT</td>
+                                            <td><span class="badge bg-danger">Admin</span></td>
+                                            <td><span class="badge bg-success">Active</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>EMP002</td>
+                                            <td>John Doe</td>
+                                            <td>employee@company.com</td>
+                                            <td>Development</td>
+                                            <td><span class="badge bg-primary">Employee</span></td>
+                                            <td><span class="badge bg-success">Active</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="shiftsPage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-business-time me-2"></i> Shifts</h2>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Create Shift
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>Morning Shift</h5>
+                                    <p class="text-muted">Standard morning working hours</p>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Start:</strong> 09:00 AM
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>End:</strong> 05:00 PM
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <span class="badge bg-primary">Mon-Fri</span>
+                                        <span class="badge bg-info">8 hours</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>Evening Shift</h5>
+                                    <p class="text-muted">Evening working hours</p>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Start:</strong> 02:00 PM
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>End:</strong> 10:00 PM
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <span class="badge bg-primary">Mon-Fri</span>
+                                        <span class="badge bg-info">8 hours</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reportsPage" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-chart-bar me-2"></i> Reports</h2>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i> Export Report
+                        </button>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+                                    <h4>95%</h4>
+                                    <p class="mb-0">Attendance Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                    <h4>5%</h4>
+                                    <p class="mb-0">Late Arrivals</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-calendar-times fa-2x text-info mb-2"></i>
+                                    <h4>12</h4>
+                                    <p class="mb-0">Leave Requests</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-business-time fa-2x text-primary mb-2"></i>
+                                    <h4>1,200</h4>
+                                    <p class="mb-0">Total Hours</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Monthly Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Detailed reports and analytics will be displayed here.</p>
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                                <p class="text-muted">Charts and graphs will be implemented here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // API Configuration - Detect if we're on Live Server (port 5500) or demo server
+        const isLiveServer = window.location.port === '5500';
+        const API_BASE = isLiveServer ? '' : '/api'; // Empty for Live Server, /api for demo server
+        let currentUser = null;
+        let authToken = localStorage.getItem('authToken');
+
+        // Demo users for Live Server
+        const demoUsers = [
+            {
+                id: '1',
+                employeeId: 'EMP001',
+                firstName: 'Admin',
+                lastName: 'User',
+                fullName: 'Admin User',
+                email: 'admin@hotmail.com',
+                password: 'abc',
+                role: 'admin',
+                department: 'IT',
+                position: 'System Administrator',
+                isActive: true
+            },
+            {
+                id: '2',
+                employeeId: 'EMP002',
+                firstName: 'John',
+                lastName: 'Doe',
+                fullName: 'John Doe',
+                email: 'employee@company.com',
+                password: 'password123',
+                role: 'employee',
+                department: 'Development',
+                position: 'Software Developer',
+                isActive: true
+            }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            setInterval(updateCurrentDate, 60000); // Update every minute
+            
+            if (authToken) {
+                verifyToken();
+            } else {
+                showLoginPage();
+            }
+        });
+
+        // Authentication functions
+        async function verifyToken() {
+            if (isLiveServer) {
+                // For Live Server, check local storage
+                const userId = authToken.replace('demo_token_', '');
+                const user = demoUsers.find(u => u.id === userId);
+                if (user) {
+                    currentUser = user;
+                    showDashboard();
+                } else {
+                    localStorage.removeItem('authToken');
+                    showLoginPage();
+                }
+            } else {
+                // For demo server
+                try {
+                    const response = await fetch(`${API_BASE}/auth/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        showDashboard();
+                    } else {
+                        throw new Error('Token invalid');
+                    }
+                } catch (error) {
+                    localStorage.removeItem('authToken');
+                    showLoginPage();
+                }
+            }
+        }
+
+        async function login(email, password) {
+            if (isLiveServer) {
+                // For Live Server, use local authentication
+                const user = demoUsers.find(u => u.email === email && u.password === password);
+                if (user) {
+                    authToken = `demo_token_${user.id}`;
+                    currentUser = user;
+                    localStorage.setItem('authToken', authToken);
+                    showDashboard();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } else {
+                // For demo server
+                try {
+                    const response = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        authToken = data.token;
+                        currentUser = data.user;
+                        localStorage.setItem('authToken', authToken);
+                        showDashboard();
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    alert('Login failed. Please try again.');
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            currentUser = null;
+            showLoginPage();
+        }
+
+        // UI functions
+        function showLoginPage() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('sidebar').style.display = 'none';
+            document.getElementById('mainContent').className = 'col-12 page-content p-4';
+            hideAllPages();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'block';
+            document.getElementById('mainContent').className = 'col-md-9 col-lg-10 page-content p-4';
+            
+            // Update user info in sidebar
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.fullName || `${currentUser.firstName} ${currentUser.lastName}`;
+                document.getElementById('userRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+                
+                // Show admin-only items
+                if (['admin', 'hr'].includes(currentUser.role)) {
+                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+                }
+                
+                // Show employee quick actions
+                if (currentUser.role === 'employee') {
+                    document.getElementById('quickActions').style.display = 'block';
+                }
+            }
+            
+            showPage('dashboard', document.querySelector('.nav-link.active'));
+            loadDashboardData();
+        }
+
+        function showPage(pageId, clickedElement) {
+            hideAllPages();
+            document.getElementById(pageId + 'Page').style.display = 'block';
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            }
+            
+            // Prevent default link behavior
+            return false;
+        }
+
+        function hideAllPages() {
+            ['dashboard', 'attendance', 'leaves', 'users', 'shifts', 'reports'].forEach(page => {
+                const element = document.getElementById(page + 'Page');
+                if (element) element.style.display = 'none';
+            });
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Dashboard functions
+        async function loadDashboardData() {
+            if (isLiveServer) {
+                // For Live Server, use mock data
+                const mockDashboard = currentUser.role === 'employee' ? {
+                    todayStatus: {
+                        hasCheckedIn: false,
+                        hasCheckedOut: false,
+                        checkInTime: null,
+                        checkOutTime: null,
+                        workingHours: '0h 0m'
+                    },
+                    monthlyStats: {
+                        presentDays: 20,
+                        lateDays: 2,
+                        totalWorkingHours: 9600
+                    },
+                    leaveInfo: {
+                        pendingRequests: 1,
+                        approvedThisMonth: 2
+                    }
+                } : {
+                    totalEmployees: 150,
+                    todayAttendance: {
+                        present: 142,
+                        late: 5,
+                        absent: 3
+                    },
+                    leaveRequests: {
+                        pending: 8,
+                        approved: 25
+                    }
+                };
+                populateDashboard(mockDashboard);
+            } else {
+                // For demo server
+                try {
+                    const response = await fetch(`${API_BASE}/dashboard/overview`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        populateDashboard(data.dashboard);
+                    }
+                } catch (error) {
+                    console.error('Failed to load dashboard data:', error);
+                }
+            }
+        }
+
+        function populateDashboard(dashboard) {
+            const statsContainer = document.getElementById('statsCards');
+            statsContainer.innerHTML = '';
+
+            if (currentUser.role === 'employee') {
+                // Employee dashboard
+                const todayStatus = dashboard.todayStatus;
+                
+                // Update today's status
+                document.getElementById('checkinTime').textContent = 
+                    todayStatus.checkInTime ? new Date(todayStatus.checkInTime).toLocaleTimeString() : '--:--';
+                document.getElementById('checkoutTime').textContent = 
+                    todayStatus.checkOutTime ? new Date(todayStatus.checkOutTime).toLocaleTimeString() : '--:--';
+                document.getElementById('workingHours').textContent = todayStatus.workingHours || '0h 0m';
+                
+                // Update check-in/out buttons
+                if (todayStatus.hasCheckedIn && !todayStatus.hasCheckedOut) {
+                    document.getElementById('checkinBtn').style.display = 'none';
+                    document.getElementById('checkoutBtn').style.display = 'inline-block';
+                } else if (todayStatus.hasCheckedOut) {
+                    document.getElementById('checkinBtn').style.display = 'none';
+                    document.getElementById('checkoutBtn').style.display = 'none';
+                }
+
+                // Create stats cards for employee
+                const stats = [
+                    { title: 'Present Days', value: dashboard.monthlyStats.presentDays, icon: 'fa-calendar-check', color: 'success' },
+                    { title: 'Late Days', value: dashboard.monthlyStats.lateDays, icon: 'fa-clock', color: 'warning' },
+                    { title: 'Total Hours', value: Math.round(dashboard.monthlyStats.totalWorkingHours / 60), icon: 'fa-business-time', color: 'info' },
+                    { title: 'Pending Leaves', value: dashboard.leaveInfo.pendingRequests, icon: 'fa-calendar-times', color: 'secondary' }
+                ];
+
+                stats.forEach(stat => {
+                    statsContainer.innerHTML += createStatCard(stat);
+                });
+
+            } else {
+                // Admin/HR dashboard
+                const stats = [
+                    { title: 'Total Employees', value: dashboard.totalEmployees, icon: 'fa-users', color: 'primary' },
+                    { title: 'Present Today', value: dashboard.todayAttendance.present, icon: 'fa-user-check', color: 'success' },
+                    { title: 'Late Today', value: dashboard.todayAttendance.late, icon: 'fa-user-clock', color: 'warning' },
+                    { title: 'Pending Leaves', value: dashboard.leaveRequests.pending, icon: 'fa-calendar-times', color: 'info' }
+                ];
+
+                stats.forEach(stat => {
+                    statsContainer.innerHTML += createStatCard(stat);
+                });
+            }
+        }
+
+        function createStatCard(stat) {
+            return `
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card text-${stat.color}">
+                        <div class="card-body text-center">
+                            <i class="fas ${stat.icon} fa-2x mb-2"></i>
+                            <h3>${stat.value}</h3>
+                            <p class="mb-0">${stat.title}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Attendance functions
+        async function checkIn() {
+            if (isLiveServer) {
+                // For Live Server, just show a message
+                alert('Checked in successfully at ' + new Date().toLocaleTimeString());
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/attendance/checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude: null, // Can be implemented with geolocation
+                        longitude: null,
+                        address: null
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    loadDashboardData(); // Refresh dashboard
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Check-in failed. Please try again.');
+            }
+        }
+
+        async function checkOut() {
+            if (isLiveServer) {
+                // For Live Server, just show a message
+                alert('Checked out successfully at ' + new Date().toLocaleTimeString());
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/attendance/checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude: null,
+                        longitude: null,
+                        address: null
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    loadDashboardData(); // Refresh dashboard
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Check-out failed. Please try again.');
+            }
+        }
+
+        // Event handlers
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            login(email, password);
+        });
+    </script>
+</body>
+</html>
