@@ -30,8 +30,12 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [process.env.FRONTEND_URL || '*'] 
+  : ['http://localhost:3001', 'http://127.0.0.1:5500'];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'your-frontend-domain.com' : 'http://localhost:3001',
+  origin: allowedOrigins,
   credentials: true
 }));
 
