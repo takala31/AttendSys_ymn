@@ -361,6 +361,10 @@ const seedData = async () => {
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 5) + 1); // 1-5 days
         
+        // Calculate total days
+        const timeDiff = endDate.getTime() - startDate.getTime();
+        const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end date
+        
         const type = leaveTypes[Math.floor(Math.random() * leaveTypes.length)];
         const statuses = ['pending', 'approved', 'rejected'];
         const status = statuses[Math.floor(Math.random() * statuses.length)];
@@ -370,6 +374,7 @@ const seedData = async () => {
           type,
           startDate,
           endDate,
+          totalDays,
           reason: `Sample ${type} leave request`,
           status,
           appliedDate: new Date(startDate.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Applied up to 7 days before
