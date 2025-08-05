@@ -6,8 +6,16 @@ class AttendSysData {
 
     // Initialize default data if not exists
     initializeData() {
-        // Check if users exist, if not or if empty, initialize with defaults
-        const existingUsers = JSON.parse(localStorage.getItem('attendsys_users') || '[]');
+        try {
+            // Check if localStorage is available (Chrome private mode check)
+            if (typeof(Storage) === "undefined") {
+                console.warn('LocalStorage not supported in this browser');
+                this.fallbackMode = true;
+                return;
+            }
+            
+            // Check if users exist, if not or if empty, initialize with defaults
+            const existingUsers = JSON.parse(localStorage.getItem('attendsys_users') || '[]');
         if (existingUsers.length === 0) {
             const defaultUsers = [
                 {
@@ -356,6 +364,10 @@ class AttendSysData {
                 }
             ];
             localStorage.setItem('attendsys_attendance', JSON.stringify(defaultAttendance));
+        }
+        } catch (error) {
+            console.error('Error initializing AttendSys data:', error);
+            this.fallbackMode = true;
         }
     }
 
